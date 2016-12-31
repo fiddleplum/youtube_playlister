@@ -24,6 +24,10 @@ YouTube.togglePause = function() {
 	}
 }
 
+YouTube.seekOffset = function(offset) {
+	this._player.seekTo(this._player.getCurrentTime() + offset, true);
+}
+
 YouTube.stop = function() {
 	this._player.stopVideo();
 }
@@ -41,6 +45,14 @@ YouTube.toggleMute = function() {
 
 function onYouTubeIframeAPIReady() {
 	YouTube._player = new YT.Player('player', {
+		playerVars: {
+			rel: 0,
+			showinfo: 0,
+			fs: 0,
+			disablekb: 1,
+			controls: 0,
+			autoplay: 0
+		},
 		events: {
 			'onStateChange': onPlayerStateChange
 		}

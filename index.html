@@ -27,6 +27,8 @@
 			}
 			function playCurrentSong() {
 				document.getElementById('currentPlaylist_' + currentSongIndex).className = 'currentSong';
+				document.getElementById('currentSong').innerHTML = currentPlaylist[currentSongIndex][1];
+				document.title = currentPlaylist[currentSongIndex][1];
 				YouTube.play(playlists[currentPlaylist[currentSongIndex][0]][currentPlaylist[currentSongIndex][1]], function() {
 					document.getElementById('currentPlaylist_' + currentSongIndex).className = '';
 					currentSongIndex += 1;
@@ -76,6 +78,12 @@
 						requestFullScreen.bind(iframe)();
 					}
 				}
+				else if(e.which == 74 || e.which == 37) {
+					YouTube.seekOffset(-10);
+				}
+				else if(e.which == 76 || e.which == 39) {
+					YouTube.seekOffset(10);
+				}
 			}
 			document.addEventListener('keyup', onKeyUp, false);
 			document.addEventListener('blur', function() {document.focus(); });
@@ -84,13 +92,15 @@
 		<style>
 			body { background: #0A0322; color: #AFA5D0; font-family: Tenor Sans; }
 			a { color: #6E5F9E; cursor: hand; }
-			h1 { text-align: center; color: #AFA5D0; }
+			#currentSong { text-align: center; }
+			h1 { text-align: center; font-size: 2em; color: #AFA5D0; }
 			li { list-style-type: none; }
 			.currentSong { background: #AFA5D0; color: #1F104C; }
 		</style>
 	</head>
 	<body>
 		<h1>Youtube Playlister</h1>
+		<p id="currentSong"></p>
 		<p id="message"></p>
 		<h2>Playlists</h2>
 		<div id="playlists"></div>
