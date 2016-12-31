@@ -26,10 +26,13 @@
 				}
 			}
 			function playCurrentSong() {
+				var playlistName = currentPlaylist[currentSongIndex][0]
+				var songName = currentPlaylist[currentSongIndex][1]
+				var songId = playlists[playlistName][songName];
 				document.getElementById('currentPlaylist_' + currentSongIndex).className = 'currentSong';
-				document.getElementById('currentSong').innerHTML = currentPlaylist[currentSongIndex][1];
+				document.getElementById('currentSong').innerHTML = '<a href="https://www.youtube.com/watch?v=' + songId + '" target="_blank" onclick="YouTube.togglePause();">' + songName + '</a>';
 				document.title = currentPlaylist[currentSongIndex][1];
-				YouTube.play(playlists[currentPlaylist[currentSongIndex][0]][currentPlaylist[currentSongIndex][1]], function() {
+				YouTube.play(songId, function() {
 					document.getElementById('currentPlaylist_' + currentSongIndex).className = '';
 					currentSongIndex += 1;
 					if(currentSongIndex >= currentPlaylist.length) {
