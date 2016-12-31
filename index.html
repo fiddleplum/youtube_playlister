@@ -12,9 +12,6 @@
 				playlists = JSON.parse(content);
 				Object.keys(playlists).forEach(function(playlistName, index) {
 					document.getElementById('playlists').innerHTML += '<h2><a onclick="playPlaylist(\'' + playlistName + '\');">' + playlistName + '</a></h2>';
-					Object.keys(playlists[playlistName]).forEach(function(songName, index) {
-						document.getElementById('playlists').innerHTML += '<h3>' + songName + '</h3>';
-					});
 				});
 			}, function(url, status) {
 				document.getElementById('message').innerHTML = 'Could not download playlists.json';
@@ -49,6 +46,6 @@
 		<h1>Youtube Playlister</h1>
 		<p id="message"></p>
 		<div id="playlists"></div>
-		<div id="player"></div>
+		<div id="player" style="position: absolute; top: 0; right: 0;"></div>
 	</body>
 </html>
