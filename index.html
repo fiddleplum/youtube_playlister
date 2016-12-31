@@ -1,0 +1,54 @@
+<html>
+	<head>
+		<script src="downloader.js"></script>
+		<script src="youtube.js"></script>
+		<script>
+			YouTube.init();
+			var playlists = {}
+			var currentPlaylist = []; // an array of 2-tuples (playlistName and songName)
+			var currentSongIndex = 0;
+			Downloader.setNoCache();
+			Downloader.add('playlists.json', function (url, content) {
+				playlists = JSON.parse(content);
+				Object.keys(playlists).forEach(function(playlistName, index) {
+					document.getElementById('playlists').innerHTML += '<h2><a onclick="playPlaylist(\'' + playlistName + '\');">' + playlistName + '</a></h2>';
+					Object.keys(playlists[playlistName]).forEach(function(songName, index) {
+						document.getElementById('playlists').innerHTML += '<h3>' + songName + '</h3>';
+					});
+				});
+			}, function(url, status) {
+				document.getElementById('message').innerHTML = 'Could not download playlists.json';
+			});
+			function shuffleCurrentPlaylist() {
+				for(let i = currentPlaylist.length; i; i--) {
+					let j = Math.floor(Math.random() * i);
+					[currentPlaylist[i - 1], currentPlaylist[j]] = [currentPlaylist[j], currentPlaylist[i - 1]];
+				}
+			}
+			function playCurrentSong() {
+				YouTube.play(playlists[currentPlaylist[currentSongIndex][0]][currentPlaylist[currentSongIndex][1]], function() {
+					currentSongIndex += 1;
+					if(currentSongIndex >= currentPlaylist.length) {
+						currentSongIndex = 0;
+					}
+					playCurrentSong();
+				});
+			}
+			function playPlaylist(playlistName) {
+				currentPlaylist = [];
+				Object.keys(playlists[playlistName]).forEach(function (songName, index) {
+					currentPlaylist.push([playlistName, songName]);
+				});
+				shuffleCurrentPlaylist();
+				currentSongIndex = 0;
+				playCurrentSong();
+			}
+		</script>
+	</head>
+	<body>
+		<h1>Youtube Playlister</h1>
+		<p id="message"></p>
+		<div id="playlists"></div>
+		<div id="player"></div>
+	</body>
+</html>
