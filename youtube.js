@@ -12,6 +12,7 @@ YouTube.play = function(videoId, donePlayingFunction) {
 	this._donePlayingFunction = donePlayingFunction;
 	this._player.setVolume(100);
 	this._player.loadVideoById(videoId, 0, "hd720");
+	this._playing = false;
 }
 
 YouTube.togglePause = function() {

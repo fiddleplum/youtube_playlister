@@ -58,7 +58,7 @@
 			}
 			function onKeyUp(e) {
 				if(e.shiftKey && e.which == 80) { // shift p
-					playSong((currentSongIndex - 1) % currentPlaylist.length);
+					playSong((currentSongIndex + currentPlaylist.length - 1) % currentPlaylist.length);
 				}
 				else if(e.shiftKey && e.which == 78) { // shift n
 					playSong((currentSongIndex + 1) % currentPlaylist.length);
