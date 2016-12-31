@@ -53,7 +53,7 @@ function onPlayerStateChange(event) {
 		YouTube._playing = true;
 	}
 	if(event.data == -1 && YouTube._playing) { // invalid video, so pause everything to get the right one.
-		console.log("ERROR: " + YouTube._player.getVideoUrl() + " is invalid");
+		document.getElementById('message').innerHTML = "ERROR: " + YouTube._player.getVideoUrl() + " is invalid";
 	}
 	if (event.data == YT.PlayerState.ENDED) {
 		YouTube._playing = false;
