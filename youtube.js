@@ -10,24 +10,41 @@ YouTube.init = function(id) {
 
 YouTube.play = function(videoId, donePlayingFunction) {
 	this._donePlayingFunction = donePlayingFunction;
+	this._player.setVolume(100);
 	this._player.loadVideoById(videoId, 0, "hd720");
+}
+
+YouTube.togglePause = function() {
+	if(this._player.getPlayerState() == 2) {
+		this._player.playVideo();
+	}
+	else {
+		this._player.pauseVideo();
+	}
 }
 
 YouTube.stop = function() {
 	this._player.stopVideo();
 }
 
+YouTube.toggleMute = function() {
+	if(this._player.isMuted()) {
+		this._player.unMute();
+	}
+	else {
+		this._player.mute();
+	}
+}
+
 // Internal
 
 function onYouTubeIframeAPIReady() {
 	YouTube._player = new YT.Player('player', {
-		height: '120',
-		width: '240',
-		videoId: '',
 		events: {
 			'onStateChange': onPlayerStateChange
 		}
 	});
+	YouTube._player.addEventListener('onfocus', function () { document.body.focus(); });
 }
 
 function onPlayerStateChange(event) {

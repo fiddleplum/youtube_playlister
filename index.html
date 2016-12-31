@@ -10,9 +10,12 @@
 			Downloader.setNoCache();
 			Downloader.add('playlists.json', function (url, content) {
 				playlists = JSON.parse(content);
+				playlistsDivContent = '<ul>';
 				Object.keys(playlists).forEach(function(playlistName, index) {
-					document.getElementById('playlists').innerHTML += '<h2><a onclick="playPlaylist(\'' + playlistName + '\');">' + playlistName + '</a></h2>';
+					playlistsDivContent += '<li><a onclick="playPlaylist(\'' + playlistName + '\');">' + playlistName + '</a></li>';
 				});
+				playlistsDivContent += '</ul>';
+				document.getElementById('playlists').innerHTML = playlistsDivContent;
 			}, function(url, status) {
 				document.getElementById('message').innerHTML = 'Could not download playlists.json';
 			});
@@ -23,7 +26,9 @@
 				}
 			}
 			function playCurrentSong() {
+				document.getElementById('currentPlaylist_' + currentSongIndex).className = 'currentSong';
 				YouTube.play(playlists[currentPlaylist[currentSongIndex][0]][currentPlaylist[currentSongIndex][1]], function() {
+					document.getElementById('currentPlaylist_' + currentSongIndex).className = '';
 					currentSongIndex += 1;
 					if(currentSongIndex >= currentPlaylist.length) {
 						currentSongIndex = 0;
@@ -31,21 +36,67 @@
 					playCurrentSong();
 				});
 			}
+			function playSong(index) {
+				document.getElementById('currentPlaylist_' + currentSongIndex).className = '';
+				currentSongIndex = index;
+				playCurrentSong();
+			}
 			function playPlaylist(playlistName) {
 				currentPlaylist = [];
 				Object.keys(playlists[playlistName]).forEach(function (songName, index) {
 					currentPlaylist.push([playlistName, songName]);
 				});
 				shuffleCurrentPlaylist();
+				currentPlaylistDivContent = '<ol>';
+				currentPlaylist.forEach(function(song, index) {
+					currentPlaylistDivContent += '<li><a id="currentPlaylist_' + index + '" onclick="playSong(' + index + ');">' + song[1] + '</a></li>';
+				});
+				currentPlaylistDivContent += '</ol>';
+				document.getElementById('currentPlaylist').innerHTML = currentPlaylistDivContent;
 				currentSongIndex = 0;
 				playCurrentSong();
 			}
+			function onKeyUp(e) {
+				if(e.shiftKey && e.which == 80) { // shift p
+					playSong((currentSongIndex - 1) % currentPlaylist.length);
+				}
+				else if(e.shiftKey && e.which == 78) { // shift n
+					playSong((currentSongIndex + 1) % currentPlaylist.length);
+				}
+				else if(e.which == 75 || e.which == 32) { // k or space
+					YouTube.togglePause();
+				}
+				else if(e.which == 77) {
+					YouTube.toggleMute();
+				}
+				else if(e.which == 70) {
+					var iframe = document.getElementById('player');
+					var requestFullScreen = iframe.requestFullScreen || iframe.mozRequestFullScreen || iframe.webkitRequestFullScreen;
+					if(requestFullScreen) {
+						requestFullScreen.bind(iframe)();
+					}
+				}
+			}
+			document.addEventListener('keyup', onKeyUp, false);
+			document.addEventListener('blur', function() {document.focus(); });
 		</script>
+		<link href="https://fonts.googleapis.com/css?family=Tenor+Sans" rel="stylesheet"/>
+		<style>
+			body { background: #0A0322; color: #AFA5D0; font-family: Tenor Sans; }
+			a { color: #6E5F9E; cursor: hand; }
+			h1 { text-align: center; color: #AFA5D0; }
+			li { list-style-type: none; }
+			.currentSong { background: #AFA5D0; color: #1F104C; }
+		</style>
 	</head>
 	<body>
 		<h1>Youtube Playlister</h1>
 		<p id="message"></p>
+		<h2>Playlists</h2>
 		<div id="playlists"></div>
-		<div id="player" style="position: absolute; top: 0; right: 0;"></div>
+		<div id="player" style="position: absolute; top: 0; right: 0; width: 240px; height: 120px;"></div>
+		<div id="overlay" style="position: absolute; top: 0; right: 0; width: 240px; height: 120px; background: rgba(1, 1, 1, 0);"></div>
+		<h2>Currently Playing</h2>
+		<div id="currentPlaylist"></div>
 	</body>
 </html>
