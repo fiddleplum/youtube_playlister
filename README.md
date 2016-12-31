@@ -42,7 +42,6 @@ To export your existing YouTube playlist, go to a song in the playlist and then 
 		var x = body.match(/data-list-title=.*/)[0];
 		var x = x.replace(/.*data-list-title="/, '');
 		var Title = x.replace(/".*/, '');
-		var body = body.replace(/data-video-id="/g, 'data-video-id="https://www.youtube.com/watch?v=');
 		if (body.match(/li class=.yt-uix-scroller-scroll-unit/)) {
 			var matches = body.match(/li class=.yt-uix-scroller-scroll-unit.*/g);
 			for(i=0; i<matches.length; i++) {
@@ -53,7 +52,7 @@ To export your existing YouTube playlist, go to a song in the playlist and then 
 				var VName = VName.replace(/".*/, "");
 				var VName = VName.replace(/&quot;/g, "\\&quot;");
 				console.log(VName);
-				var x = "\t\t\"" + VName + "\", \"" + ID + "\"";
+				var x = "\t\t\"" + VName + "\" : \"" + ID + "\"";
 				if(i != matches.length - 1) x += ",";
 				lines.push(x);
 			};
