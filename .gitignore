@@ -1,1 +1,4 @@
-playlists.json
+node_modules/
+www/main.js
+www/keys/
+www/playlists.json

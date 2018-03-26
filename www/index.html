@@ -1,0 +1,25 @@
+<html>
+	<head>
+		<script src="./main.js"/></script>
+		<link href="https://fonts.googleapis.com/css?family=Tenor+Sans" rel="stylesheet"/>
+		<style>
+			body { background: #0A0A22; color: #FFFFFF; font-family: Tenor Sans; }
+			a { color: #EEEEFF; cursor: hand; }
+			#currentSong { text-align: center; }
+			h1 { text-align: center; font-size: 2em; color: #FFFFFF; }
+			li { list-style-type: none; }
+			.currentSong { background: #666688; color: #FFFFFF; }
+		</style>
+	</head>
+	<body>
+		<h1>Youtube Playlister</h1>
+		<p id="currentSong"></p>
+		<p id="message"></p>
+		<h2>Playlists</h2>
+		<div id="playlists"></div>
+		<div id="player" style="position: absolute; top: 0; right: 0; width: 240px; height: 120px;"></div>
+		<div id="overlay" style="position: absolute; top: 0; right: 0; width: 240px; height: 120px; background: rgba(1, 1, 1, 0);"></div>
+		<h2>Currently Playing</h2>
+		<div id="currentPlaylist"></div>
+	</body>
+</html>

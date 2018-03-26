@@ -1,0 +1,30 @@
+{
+	"name": "youtube_playlister",
+	"version": "0.0.0",
+	"description": "A YouTube Playlist Webpage",
+	"private": true,
+	"main": "index.html",
+	"scripts": {
+		"start": "webpack-dev-server --mode development --output-path www/ --content-base www/ --open",
+		"build": "webpack --mode development && cp dist/* www/ && rm -rf dist",
+		"build-production": "webpack --mode production && cp dist/* www/ && rm -rf dist"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/fiddleplum/youtube_playlister.git"
+	},
+	"author": "Stephen Hurley",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/fiddleplum/youtube_playlister/issues"
+	},
+	"homepage": "https://github.com/fiddleplum/youtube_playlister#readme",
+	"dependencies": {
+		"@fiddleplum/s3-fs": "0.0.2"
+	},
+	"devDependencies": {
+		"webpack": "^4.2.0",
+		"webpack-cli": "^2.0.13",
+		"webpack-dev-server": "^3.1.1"
+	}
+}
