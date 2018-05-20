@@ -34,6 +34,28 @@ class App {
 		}
 	}
 
+	static formatTime(seconds) {
+		let s = '';
+		if (seconds >= 3600) {
+			s += Math.floor(seconds / 3600) + ':';
+			seconds -= Math.floor(seconds / 3600) * 3600;
+		}
+		s += Math.floor(seconds / 60).toString().padStart(s != '' ? 2 : 1, '0') + ':';
+		seconds -= Math.floor(seconds / 60) * 60;
+		s += Math.floor(seconds).toString().padStart(2, '0');
+		return s;
+	}
+
+	static updateTime() {
+		if (youtube.isPlayingOrPaused()) {
+			document.getElementById('songTime').innerHTML = App.formatTime(youtube.getCurrentTime()) + ' / ' + App.formatTime(youtube.getTotalTime());
+		}
+		else {
+			document.getElementById('songTime').innerHTML = '';
+		}
+		setTimeout(App.updateTime, 500);
+	}
+
 	static playCurrentSong() {
 		if (currentPlaylist.length === 0) {
 			App.showMessage('The playlist is empty.');
@@ -44,10 +66,11 @@ class App {
 		let playlistName = currentPlaylist[currentSongIndex][0]
 		let songName = currentPlaylist[currentSongIndex][1]
 		let songId = playlists[playlistName][songName];
+
 		document.getElementById('currentPlaylist_' + currentSongIndex).className = 'currentSong';
 		document.getElementById('currentSongTitle').innerHTML = 'Song: ' + songName + ' <a href="https://www.youtube.com/watch?v=' + songId + '" target="_blank" onclick="youtube.pause();">➦</a>';
 		document.title = 'YP: ' + currentPlaylist[currentSongIndex][1];
-		youtube.play(songId, function () {
+		youtube.play(songId, () => {
 			document.getElementById('currentPlaylist_' + currentSongIndex).className = '';
 			currentSongIndex += 1;
 			if (currentSongIndex >= currentPlaylist.length) {
@@ -157,6 +180,7 @@ document.addEventListener('DOMContentLoaded', async() => {
 	playlistsDivContent += '</ul>';
 	document.getElementById('playlists_content').innerHTML = playlistsDivContent;
 	App.showMessage('Loaded and ready.');
+	App.updateTime();
 });
 
 document.addEventListener('keyup', App.onKeyUp, false);

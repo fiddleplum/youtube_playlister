@@ -13,6 +13,10 @@ class YouTube {
 		window.onYouTubeIframeAPIReady = this._onYouTubeIframeAPIReady.bind(this);
 	}
 
+	isPlayingOrPaused() {
+		return this._playing;
+	}
+
 	play(videoId, donePlayingFunction) {
 		this._donePlayingFunction = donePlayingFunction;
 		this._player.setVolume(100);
@@ -35,6 +39,14 @@ class YouTube {
 	stop() {
 		this._playing = false;
 		this._player.stopVideo();
+	}
+
+	getCurrentTime() {
+		return this._player.getCurrentTime();
+	}
+
+	getTotalTime() {
+		return this._player.getDuration();
 	}
 
 	seekOffset(offset) {
