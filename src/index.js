@@ -183,7 +183,6 @@ document.addEventListener('DOMContentLoaded', async() => {
 	try {
 		let playlistsText = await s3fs.load('playlists.json');
 		playlists = JSON.parse(playlistsText);
-		console.log(playlists);
 	}
 	catch (error) {
 		App.showMessage(error);
