@@ -20,8 +20,12 @@
 		<div id="playlist">
 			<h2>Currently Playing</h2>
 			<div id="playlist_content"></div>
-			<input type="text" />
-		</div>
+			<div id="newSong">
+					<button id="newSongButton" onclick="App.addSong();">Add</button>
+					<input type="text" id="newSongName" placeholder="song name" />
+					<input type="text" id="newSongId" placeholder="song id" />
+				</div>
+			</div>
 		<div id="message"></div>
 	</body>
 </html>

@@ -37,7 +37,7 @@ h2 {
 	margin-top: 0;
 }
 
-ul, li {
+ol, ul, li {
 	list-style-type: none;
 	list-style-position: inside;
 	margin: 0;
@@ -88,7 +88,7 @@ ul, li {
 	background: var(--fg);
 	border-top-right-radius: 16px;
 	border-bottom-right-radius: 16px;
-	min-width: 240px;
+	min-width: 512px;
 	max-width: calc(100vw - 240px - 16px);
 	color: var(--bg);
 }
@@ -103,4 +103,25 @@ ul, li {
 	font-size: 32px;
 	line-height: 32px;
 	overflow: hidden;
+}
+
+#newSong {
+	display: none;
+	margin-top: 16px;
+	width: 368px;
+}
+
+#newSongName, #newSongId {
+	display: block;
+	width: 256px;
+	height: 24px;
+}
+
+#newSongButton {
+	float: right;
+	width: 96px;
+	height: 48px;
+	background: var(--bg);
+	color: var(--fg);
+	border: 0;
 }

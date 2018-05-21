@@ -68,7 +68,7 @@ class App {
 		let songId = playlists[playlistName][songName];
 
 		document.getElementById('currentPlaylist_' + currentSongIndex).className = 'currentSong';
-		document.getElementById('currentSongTitle').innerHTML = 'Song: ' + songName + ' <a href="https://www.youtube.com/watch?v=' + songId + '" target="_blank" onclick="youtube.pause();">➦</a>';
+		document.getElementById('currentSongTitle').innerHTML = songName + ' <a href="https://www.youtube.com/watch?v=' + songId + '" target="_blank" onclick="youtube.pause();">➦</a>';
 		document.title = 'YP: ' + currentPlaylist[currentSongIndex][1];
 		youtube.play(songId, () => {
 			document.getElementById('currentPlaylist_' + currentSongIndex).className = '';
@@ -87,7 +87,7 @@ class App {
 	}
 
 	static playPlaylist(playlistName) {
-		document.getElementById('currentPlaylistTitle').innerHTML = 'Playlist: ' + playlistName;
+		document.getElementById('currentPlaylistTitle').innerHTML = playlistName;
 		currentPlaylist = [];
 		Object.keys(playlists[playlistName]).forEach(function (songName, index) {
 			currentPlaylist.push([playlistName, songName]);
@@ -100,10 +100,27 @@ class App {
 		currentPlaylistDivContent += '</ol>';
 		document.getElementById('playlist_content').innerHTML = currentPlaylistDivContent;
 		currentSongIndex = 0;
+		document.getElementById('newSong').style.display = 'block';
 		App.playCurrentSong();
 	}
 
+	static async addSong() {
+		let name = document.getElementById('newSongName').value;
+		let id = document.getElementById('newSongId').value;
+		let index = currentPlaylist.length;
+		let playlistName = currentPlaylist[currentSongIndex][0]
+		playlists[playlistName][name] = id;
+		currentPlaylist.push([playlistName, name]);
+		document.getElementById('playlist_content').firstChild.innerHTML += '<li><a id="currentPlaylist_' + index + '" onclick="App.playSong(' + index + ');">' + name + '</a></li>';
+		App.showMessage('Saving...');
+		await s3fs.save('playlists.json', JSON.stringify(playlists, null, '\t'));
+		App.showMessage('Saved.');
+	}
+
 	static onKeyUp(e) {
+		if (['newSongName', 'newSongId'].includes(document.activeElement.id)) {
+			return;
+		}
 		if (e.shiftKey && e.which == 80) { // shift p
 			App.playSong((currentSongIndex + currentPlaylist.length - 1) % currentPlaylist.length);
 		}
@@ -166,6 +183,7 @@ document.addEventListener('DOMContentLoaded', async() => {
 	try {
 		let playlistsText = await s3fs.load('playlists.json');
 		playlists = JSON.parse(playlistsText);
+		console.log(playlists);
 	}
 	catch (error) {
 		App.showMessage(error);
