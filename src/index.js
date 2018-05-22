@@ -9,7 +9,8 @@ let youtube = null;
 /** @type {S3FS} */
 let s3fs = null;
 let playlists = {}
-let currentPlaylist = []; // an array of 2-tuples (playlistName and songName)
+let currentPlaylistName = '';
+let currentPlaylist = []; // an array of 2-tuples (songName and songId)
 let currentSongIndex = 0;
 let messageTimeout = null;
 
@@ -63,15 +64,15 @@ class App {
 			document.getElementById('currentSongTitle').innerHTML = '';
 			return;
 		}
-		let playlistName = currentPlaylist[currentSongIndex][0]
-		let songName = currentPlaylist[currentSongIndex][1]
-		let songId = playlists[playlistName][songName];
+		let songName = currentPlaylist[currentSongIndex][0];
+		let songId = currentPlaylist[currentSongIndex][1];
 
-		document.getElementById('currentPlaylist_' + currentSongIndex).className = 'currentSong';
+		document.getElementById(songId).className = 'highlighted';
 		document.getElementById('currentSongTitle').innerHTML = songName + ' <a href="https://www.youtube.com/watch?v=' + songId + '" target="_blank" onclick="youtube.pause();">➦</a>';
-		document.title = 'YP: ' + currentPlaylist[currentSongIndex][1];
+		document.title = 'YP: ' + songName;
 		youtube.play(songId, () => {
-			document.getElementById('currentPlaylist_' + currentSongIndex).className = '';
+			let oldSongId = currentPlaylist[currentSongIndex][1];
+			document.getElementById(oldSongId).className = '';
 			currentSongIndex += 1;
 			if (currentSongIndex >= currentPlaylist.length) {
 				currentSongIndex = 0;
@@ -80,45 +81,95 @@ class App {
 		});
 	}
 
-	static playSong(index) {
-		document.getElementById('currentPlaylist_' + currentSongIndex).className = '';
-		currentSongIndex = index;
-		App.playCurrentSong();
+	static playSong(songId) {
+		let oldSongId = currentPlaylist[currentSongIndex][1];
+		document.getElementById(oldSongId).className = '';
+		for (let i = 0; i < currentPlaylist.length; i++) {
+			if (currentPlaylist[i][1] === songId) {
+				currentSongIndex = i;
+				App.playCurrentSong();
+			}
+		}
 	}
 
 	static playPlaylist(playlistName) {
+		if (currentPlaylistName != '') {
+			document.getElementById(currentPlaylistName).className = '';
+		}
 		document.getElementById('currentPlaylistTitle').innerHTML = playlistName;
+		currentPlaylistName = playlistName;
 		currentPlaylist = [];
 		Object.keys(playlists[playlistName]).forEach(function (songName, index) {
-			currentPlaylist.push([playlistName, songName]);
+			currentPlaylist.push([songName, playlists[playlistName][songName]]);
 		});
 		App.shuffleCurrentPlaylist();
 		let currentPlaylistDivContent = '<ol>';
-		currentPlaylist.forEach(function (song, index) {
-			currentPlaylistDivContent += '<li><a id="currentPlaylist_' + index + '" onclick="App.playSong(' + index + ');">' + song[1] + '</a></li>';
+		currentPlaylist.forEach(function (entry, index) {
+			let songName = entry[0];
+			let songId = entry[1];
+			currentPlaylistDivContent += '<li><a id="' + songId + '" onclick="App.playSong(\'' + songId + '\');">' + songName + '</a><button class="delete" onclick="App.removeSong(\'' + songId + '\');">✖</button></li>';
 		});
 		currentPlaylistDivContent += '</ol>';
 		document.getElementById('playlist_content').innerHTML = currentPlaylistDivContent;
 		currentSongIndex = 0;
+		document.getElementById(playlistName).className = 'highlighted';
 		document.getElementById('newSong').style.display = 'block';
 		App.playCurrentSong();
 	}
 
 	static async addSong() {
-		let name = document.getElementById('newSongName').value;
-		let id = document.getElementById('newSongId').value;
-		let index = currentPlaylist.length;
-		let playlistName = currentPlaylist[currentSongIndex][0]
-		playlists[playlistName][name] = id;
-		currentPlaylist.push([playlistName, name]);
-		document.getElementById('playlist_content').firstChild.innerHTML += '<li><a id="currentPlaylist_' + index + '" onclick="App.playSong(' + index + ');">' + name + '</a></li>';
+		let songName = document.getElementById('newSongName').value;
+		let songId = document.getElementById('newSongId').value;
+		let playlistName = currentPlaylist[0][0]
+		playlists[currentPlaylistName][songName] = songId;
+		currentPlaylist.push([songName, songId]);
+		document.getElementById('playlist_content').firstChild.innerHTML += '<li><a id="' + songId + '" onclick="App.playSong(\'' + songId + '\');">' + songName + '</a><button class="delete" onclick="App.removeSong(\'' + songId + '\');">✖</button></li>';
+		App.showMessage('Saving...');
+		await s3fs.save('playlists.json', JSON.stringify(playlists, null, '\t'));
+		App.showMessage('Saved.');
+		document.getElementById('newSongName').value = '';
+		document.getElementById('newSongId').value = '';
+	}
+
+	static async removeSong(songId) {
+		for (let i = 0; i < currentPlaylist.length; i++) {
+			if (currentPlaylist[i][1] === songId) {
+				let songName = currentPlaylist[i][0];
+				if (!confirm('Are you sure you want to remove the song \'' + songName + '\' in the playlist \'' + currentPlaylistName + '\'?')) {
+					return;
+				}
+				document.getElementById(songId).parentElement.parentElement.removeChild(document.getElementById(songId).parentElement);
+				delete playlists[currentPlaylistName][songName];
+				App.showMessage('Saving...');
+				await s3fs.save('playlists.json', JSON.stringify(playlists, null, '\t'));
+				App.showMessage('Saved.');
+			}
+		}
+	}
+
+	static async addPlaylist() {
+		let playlistName = document.getElementById('newPlaylistName').value;
+		playlists[playlistName] = {}
+		document.getElementById('playlists_content').firstChild.innerHTML += '<li><a id="' + playlistName + '" onclick="App.playPlaylist(\'' + playlistName + '\');">' + playlistName + '</a><button class="delete" onclick="App.removePlaylist(\'' + playlistName + '\');">✖</button></li>';
+		App.showMessage('Saving...');
+		await s3fs.save('playlists.json', JSON.stringify(playlists, null, '\t'));
+		App.showMessage('Saved.');
+		document.getElementById('newPlaylistName').value = '';
+	}
+
+	static async removePlaylist(playlistName) {
+		if (!confirm('Are you sure you want to remove the playlist \'' + playlistName + '\'?')) {
+			return;
+		}
+		delete playlists[playlistName];
+		document.getElementById(playlistName).parentElement.parentElement.removeChild(document.getElementById(playlistName).parentElement);
 		App.showMessage('Saving...');
 		await s3fs.save('playlists.json', JSON.stringify(playlists, null, '\t'));
 		App.showMessage('Saved.');
 	}
 
 	static onKeyUp(e) {
-		if (['newSongName', 'newSongId'].includes(document.activeElement.id)) {
+		if (['newSongName', 'newSongId', 'newPlaylistName'].includes(document.activeElement.id)) {
 			return;
 		}
 		if (e.shiftKey && e.which == 80) { // shift p
@@ -192,7 +243,7 @@ document.addEventListener('DOMContentLoaded', async() => {
 	window.youtube = youtube;
 	let playlistsDivContent = '<ul>';
 	Object.keys(playlists).forEach(function (playlistName, index) {
-		playlistsDivContent += '<li><a onclick="App.playPlaylist(\'' + playlistName + '\');">' + playlistName + '</a></li>';
+		playlistsDivContent += '<li><a id="' + playlistName + '" onclick="App.playPlaylist(\'' + playlistName + '\');">' + playlistName + '</a><button class="delete" onclick="App.removePlaylist(\'' + playlistName + '\');">✖</button></li>';
 	});
 	playlistsDivContent += '</ul>';
 	document.getElementById('playlists_content').innerHTML = playlistsDivContent;
