@@ -173,10 +173,10 @@ class App {
 			return;
 		}
 		if (e.shiftKey && e.which == 80) { // shift p
-			App.playSong((currentSongIndex + currentPlaylist.length - 1) % currentPlaylist.length);
+			App.playSong(currentPlaylist[(currentSongIndex + currentPlaylist.length - 1) % currentPlaylist.length][1]);
 		}
 		else if (e.shiftKey && e.which == 78) { // shift n
-			App.playSong((currentSongIndex + 1) % currentPlaylist.length);
+			App.playSong(currentPlaylist[(currentSongIndex + 1) % currentPlaylist.length][1]);
 		}
 		else if (e.which == 75 || e.which == 32) { // k or space
 			if (youtube.isPaused()) {
