@@ -3,9 +3,9 @@
 }
 
 :root {
-	--bg: rgb(0, 0, 0);
-	--mg: rgb(51, 117, 179);
-	--fg: rgb(128, 181, 231);
+	--bg: rgb(56, 8, 54);
+	--mg: rgb(121, 49, 46);
+	--fg: rgb(231, 202, 107);
 }
 
 body {
@@ -21,6 +21,8 @@ a {
 	color: inherit;
 	text-decoration: none;
 	cursor: hand;
+	padding: 2px;
+	border: 1px solid var(--mg);
 }
 
 #currentSong {
@@ -48,11 +50,19 @@ ol, ul, li {
 	padding: 0;
 }
 
+li {
+	margin-top: 4px;
+}
+
 #currentPlaylistTitle, #currentSongTitle, #songTime {
 	margin-top: 8px;
 	text-align: center;
 	font-size: 24px;
 	line-height: 32px;
+}
+
+#currentSongTitle a {
+	border: 0;
 }
 
 #currentSong {
@@ -67,18 +77,19 @@ ol, ul, li {
 	width: 256px;
 	height: 128px;
 	border-bottom-left-radius: 16px;
+	border: 0;
 	pointer-events: none;
 }
 
 #playlists, #playlist {
 	position: absolute;
 	top: 144px;
-	height: calc(100% - 128px - 64px);
+	max-height: calc(100% - 128px - 64px);
+	border: 1px solid var(--fg);
 	padding: 16px;
 	overflow-y: auto;
-	background: var(--fg);
-	color: var(--bg);
-	bottom: 48px;
+	background: var(--mg);
+	color: var(--fg);
 }
 
 #playlists {
@@ -86,12 +97,14 @@ ol, ul, li {
 	width: 256px;
 	border-top-left-radius: 16px;
 	border-bottom-left-radius: 16px;
+	border-right: 0;
 }
 
 #playlist {
 	left: 0;
 	border-top-right-radius: 16px;
 	border-bottom-right-radius: 16px;
+	border-left: 0;
 	min-width: 512px;
 	max-width: calc(100vw - 240px - 16px);
 }
@@ -110,8 +123,9 @@ ol, ul, li {
 
 #newSong {
 	display: none;
-	margin-top: 4px;
+	margin-top: 8px;
 	width: 100%;
+	height: 24px;
 	font-size: 0;
 }
 
@@ -137,8 +151,9 @@ input {
 }
 
 #newPlaylist {
-	margin-top: 4px;
+	margin-top: 8px;
 	width: 100%;
+	height: 24px;
 	font-size: 0;
 }
 
@@ -169,5 +184,6 @@ button {
 }
 
 .highlighted {
-	background: var(--mg);
+	background: var(--bg);
+	border: 1px solid var(--fg);
 }
