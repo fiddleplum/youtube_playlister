@@ -120,7 +120,6 @@ class App {
 	static async addSong() {
 		let songName = document.getElementById('newSongName').value;
 		let songId = document.getElementById('newSongId').value;
-		let playlistName = currentPlaylist[0][0]
 		playlists[currentPlaylistName][songName] = songId;
 		currentPlaylist.push([songName, songId]);
 		document.getElementById('playlist_content').firstChild.innerHTML += '<li><a id="' + songId + '" onclick="App.playSong(\'' + songId + '\');">' + songName + '</a><button class="delete" onclick="App.removeSong(\'' + songId + '\');">✖</button></li>';
