@@ -3,9 +3,9 @@
 }
 
 :root {
-	--bg: rgb(56, 8, 54);
-	--mg: rgb(121, 49, 46);
-	--fg: rgb(231, 202, 107);
+	--bg: rgb(32, 32, 32);
+	--mg: rgb(64, 64, 64);
+	--fg: rgb(255, 222, 149);
 }
 
 body {
@@ -29,7 +29,7 @@ a {
 	text-align: center;
 }
 
-h1 {
+#title {
 	position: absolute;
 	top: 0;
 	left: 0;
