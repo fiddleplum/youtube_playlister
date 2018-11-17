@@ -1,8 +1,17 @@
 'use strict';
 
 import YouTube from './youtube';
-import './elem_tag_list';
+import './elem_playlist';
+import './elem_tags';
+import './elem_messages';
 import S3FS from '@fiddleplum/s3-fs';
+
+/**
+ * @typedef Song
+ * @property {string} id
+ * @property {string} title
+ * @property {Set<string>} tags
+ */
 
 class App {
 	constructor() {
@@ -10,9 +19,12 @@ class App {
 		this._youtube = null;
 		/** @type {S3FS} */
 		this._s3fs = null;
+		/** @type {Map<string, Song>} */
 		this._songs = new Map();
+		/** @type {Set<string>} */
 		this._tags = new Set();
-		this._currentPlaylistName = '';
+		this._currentTagName = '';
+		/** @type {Song[]} */
 		this._currentPlaylist = []; // an array of 2-tuples (songName and songId)
 		this._currentSongIndex = 0;
 		this._messageTimeout = null;
@@ -46,14 +58,19 @@ class App {
 		// Load JSON
 		this.showMessage('Loading JSON...');
 		try {
-			let songsText = await this._s3fs.load('songs.json');
-			for (let entry of Object.entries(JSON.parse(songsText))) {
-				this._songs.set(entry[0], entry[1]);
-			}
-			for (let entry of this._songs) {
-				for (let i = 1; i < entry[1].length; i++) {
-					this._tags.add(entry[1][i]);
+			let songsText = await this._s3fs.load('songs.json', false);
+			for (let songEntry of Object.entries(JSON.parse(songsText))) {
+				let song = {
+					'id': songEntry[0],
+					'title': songEntry[1][0],
+					'tags': new Set()
+				};
+				for (let i = 1; i < songEntry[1].length; i++) {
+					let tag = songEntry[1][i];
+					song.tags.add(tag);
+					this._tags.add(tag);
 				}
+				this._songs.set(song.id, song);
 			}
 		}
 		catch (error) {
@@ -61,15 +78,19 @@ class App {
 		}
 
 		// Populate HTML
-		document.getElementById('tag_list').tags = this._tags;
+		this.showMessage('Populating Lists');
+		document.getElementById('tags').tags = this._tags;
 
 		this.showMessage('Loaded and ready.');
 	}
 
-	shuffleCurrentPlaylist() {
-		for (let i = this._currentPlaylist.length; i; i--) {
-			let j = Math.floor(Math.random() * i);
-			[this._currentPlaylist[i - 1], this._currentPlaylist[j]] = [this._currentPlaylist[j], this._currentPlaylist[i - 1]];
+	/**
+	 * @param {Song[]} playlist
+	 */
+	static shufflePlaylist(playlist) {
+		for (let i = playlist.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[playlist[i], playlist[j]] = [playlist[j], playlist[i]];
 		}
 	}
 
@@ -97,7 +118,7 @@ class App {
 
 	playCurrentSong() {
 		if (this._currentPlaylist.length === 0) {
-			this.showMessage('The playlist is empty.');
+			this.showMessage('The tag is empty.');
 			this._youtube.stop();
 			document.getElementById('currentSongTitle').innerHTML = '';
 			return;
@@ -130,39 +151,34 @@ class App {
 		}
 	}
 
-	playPlaylist(playlistName) {
-		if (this._currentPlaylistName !== '') {
-			document.getElementById(this._currentPlaylistName).className = '';
+	playTag(tag) {
+		if (this._currentTagName !== '') {
+			document.getElementById(this._currentTagName).className = '';
 		}
-		document.getElementById('currentPlaylistTitle').innerHTML = playlistName;
-		this._currentPlaylistName = playlistName;
+		document.getElementById('currentTagTitle').innerHTML = tag;
+		this._currentTagName = tag;
 		this._currentPlaylist = [];
-		Object.keys(this._playlists[playlistName]).forEach(function (songName, index) {
-			this._currentPlaylist.push([songName, this._playlists[playlistName][songName]]);
-		});
-		this.shuffleCurrentPlaylist();
-		let currentPlaylistDivContent = '<ol>';
-		this._currentPlaylist.forEach(function (entry, index) {
-			let songName = entry[0];
-			let songId = entry[1];
-			currentPlaylistDivContent += '<li><a id="' + songId + '" onclick="App.playSong(\'' + songId + '\');">' + songName + '</a><button class="delete" onclick="App.removeSong(\'' + songId + '\');">✖</button></li>';
-		});
-		currentPlaylistDivContent += '</ol>';
-		document.getElementById('playlist_content').innerHTML = currentPlaylistDivContent;
+		for (let songEntry of this._songs) {
+			if (songEntry[1].tags.has(tag)) {
+				this._currentPlaylist.push(songEntry[1]);
+			}
+		}
+		App.shufflePlaylist(this._currentPlaylist);
+		document.getElementById('playlist').songs = this._currentPlaylist;
 		this._currentSongIndex = 0;
-		document.getElementById(playlistName).className = 'highlighted';
-		document.getElementById('newSong').style.display = 'block';
-		this.playCurrentSong();
+		// document.getElementById(tag).className = 'highlighted';
+		// document.getElementById('newSong').style.display = 'block';
+		// this.playCurrentSong();
 	}
 
 	async addSong() {
 		let songName = document.getElementById('newSongName').value;
 		let songId = document.getElementById('newSongId').value;
-		this._playlists[this._currentPlaylistName][songName] = songId;
+		this._tags[this._currentTagName][songName] = songId;
 		this._currentPlaylist.push([songName, songId]);
-		document.getElementById('playlist_content').firstChild.innerHTML += '<li><a id="' + songId + '" onclick="App.playSong(\'' + songId + '\');">' + songName + '</a><button class="delete" onclick="App.removeSong(\'' + songId + '\');">✖</button></li>';
+		document.getElementById('tag_content').firstChild.innerHTML += '<li><a id="' + songId + '" onclick="App.playSong(\'' + songId + '\');">' + songName + '</a><button class="delete" onclick="App.removeSong(\'' + songId + '\');">✖</button></li>';
 		this.showMessage('Saving...');
-		await this._s3fs.save('playlists.json', JSON.stringify(this._playlists, null, '\t'));
+		await this._s3fs.save('tags.json', JSON.stringify(this._tags, null, '\t'));
 		this.showMessage('Saved.');
 		document.getElementById('newSongName').value = '';
 		document.getElementById('newSongId').value = '';
@@ -172,41 +188,41 @@ class App {
 		for (let i = 0; i < this._currentPlaylist.length; i++) {
 			if (this._currentPlaylist[i][1] === songId) {
 				let songName = this._currentPlaylist[i][0];
-				if (!confirm('Are you sure you want to remove the song \'' + songName + '\' in the playlist \'' + this._currentPlaylistName + '\'?')) {
+				if (!confirm('Are you sure you want to remove the song \'' + songName + '\' in the tag \'' + this._currentTagName + '\'?')) {
 					return;
 				}
 				document.getElementById(songId).parentElement.parentElement.removeChild(document.getElementById(songId).parentElement);
-				delete this._playlists[this._currentPlaylistName][songName];
+				delete this._tags[this._currentTagName][songName];
 				this.showMessage('Saving...');
-				await this._s3fs.save('playlists.json', JSON.stringify(this._playlists, null, '\t'));
+				await this._s3fs.save('tags.json', JSON.stringify(this._tags, null, '\t'));
 				this.showMessage('Saved.');
 			}
 		}
 	}
 
-	async addPlaylist() {
-		let playlistName = document.getElementById('newPlaylistName').value;
-		this._playlists[playlistName] = {}
-		document.getElementById('playlists_content').firstChild.innerHTML += '<li><a id="' + playlistName + '" onclick="App.playPlaylist(\'' + playlistName + '\');">' + playlistName + '</a><button class="delete" onclick="App.removePlaylist(\'' + playlistName + '\');">✖</button></li>';
+	async addTag() {
+		let tagName = document.getElementById('newTagName').value;
+		this._tags[tagName] = {}
+		document.getElementById('tags_content').firstChild.innerHTML += '<li><a id="' + tagName + '" onclick="App.playTag(\'' + tagName + '\');">' + tagName + '</a><button class="delete" onclick="App.removeTag(\'' + tagName + '\');">✖</button></li>';
 		this.showMessage('Saving...');
-		await this._s3fs.save('playlists.json', JSON.stringify(this._playlists, null, '\t'));
+		await this._s3fs.save('tags.json', JSON.stringify(this._tags, null, '\t'));
 		this.showMessage('Saved.');
-		document.getElementById('newPlaylistName').value = '';
+		document.getElementById('newTagName').value = '';
 	}
 
-	async removePlaylist(playlistName) {
-		if (!confirm('Are you sure you want to remove the playlist \'' + playlistName + '\'?')) {
+	async removeTag(tagName) {
+		if (!confirm('Are you sure you want to remove the tag \'' + tagName + '\'?')) {
 			return;
 		}
-		delete this._playlists[playlistName];
-		document.getElementById(playlistName).parentElement.parentElement.removeChild(document.getElementById(playlistName).parentElement);
+		delete this._tags[tagName];
+		document.getElementById(tagName).parentElement.parentElement.removeChild(document.getElementById(tagName).parentElement);
 		this.showMessage('Saving...');
-		await s3fs.save('playlists.json', JSON.stringify(this._playlists, null, '\t'));
+		await s3fs.save('tags.json', JSON.stringify(this._tags, null, '\t'));
 		this.showMessage('Saved.');
 	}
 
 	static onKeyUp(e) {
-		if (['newSongName', 'newSongId', 'newPlaylistName'].includes(document.activeElement.id)) {
+		if (['newSongName', 'newSongId', 'newTagName'].includes(document.activeElement.id)) {
 			return;
 		}
 		if (e.shiftKey && e.which == 80) { // shift p
@@ -248,17 +264,7 @@ class App {
 
 	showMessage(message) {
 		console.log(message);
-		if (this._messageTimeout) {
-			clearTimeout(this._messageTimeout);
-		}
-		document.getElementById('message').innerHTML = message;
-		document.getElementById('message').style.display = 'block';
-		this._messageTimeout = setTimeout(App.hideMessage, 5000);
-	}
-
-	hideMessage() {
-		document.getElementById('message').style.display = 'none';
-		this._messageTimeout = null;
+		document.getElementById('messages').addMessage(message);
 	}
 }
 
@@ -267,18 +273,18 @@ document.addEventListener('DOMContentLoaded', async() => {
 	window.app = app;
 	app.initialize();
 
-	// let playlistsDivContent = '<ul>';
-	// Object.keys(playlists).forEach(function (playlistName, index) {
-	// 	playlistsDivContent += '<li><a id="' + playlistName + '" onclick="App.playPlaylist(\'' + playlistName + '\');">' + playlistName + '</a><button class="delete" onclick="App.removePlaylist(\'' + playlistName + '\');">✖</button></li>';
+	// let tagsDivContent = '<ul>';
+	// Object.keys(tags).forEach(function (tagName, index) {
+	// 	tagsDivContent += '<li><a id="' + tagName + '" onclick="App.playTag(\'' + tagName + '\');">' + tagName + '</a><button class="delete" onclick="App.removeTag(\'' + tagName + '\');">✖</button></li>';
 	// });
-	// playlistsDivContent += '</ul>';
-	// document.getElementById('playlists_content').innerHTML = playlistsDivContent;
+	// tagsDivContent += '</ul>';
+	// document.getElementById('tags_content').innerHTML = tagsDivContent;
 	// App.updateTime();
 });
 
 document.addEventListener('keyup', App.onKeyUp, false);
 document.addEventListener('blur', function () {
-	document.focus();
+	// document.focus();
 });
 
 window.App = App;
